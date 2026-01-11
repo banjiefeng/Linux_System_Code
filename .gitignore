@@ -1,0 +1,43 @@
+# 编译生成文件
+*.o
+*.out
+*.a
+*.so
+*.dylib
+
+# 可执行文件
+main
+main.exe
+*.elf
+
+# Makefile 生成的产物
+*.d
+*.dSYM/
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+tags
+
+# 测试和临时输出
+*.tmp
+*.log
+test_output/
+*.tmp.*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 依赖和包管理
+node_modules/
+venv/
+.env
+
+# 个人测试文件（可选）
+# local_test/
+# debug/
