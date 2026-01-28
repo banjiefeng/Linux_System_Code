@@ -3,7 +3,14 @@
 # include <time.h>
 
 # define BUFSIZE 1024   
-
+/*
+    -y: year
+    -m: month
+    -d: day
+    -H: hour
+    -M: minute
+    -S: second
+*/
 //获取100天以后的时间
 int main (int argc, char * argv[])
 {

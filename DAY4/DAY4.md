@@ -130,6 +130,7 @@ mktime(&tm);   // 自动转换为合法日期
 ```
 1. 时间格式化输出（字符串）
 ```c
+//会自动把非标准日期转为常规日期
 size_t strftime(char *s, size_t max,
                 const char *format,
                 const struct tm *tm);   // man 3

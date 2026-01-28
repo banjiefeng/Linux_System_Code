@@ -30,7 +30,7 @@ int main (int argc, char * argv[])
     {
         /* code */
         //返回成功读取的字符数量,有换行符则包含换行符
-        //会不断的自己reallocate
+        //会不断的自己reallocate 
         if(getline(&linestr, &buffersize, stream) == -1)//buffersize 是系统分配的缓冲区的大小
         break;
         printf("strlen: %ld\n", strlen(linestr));

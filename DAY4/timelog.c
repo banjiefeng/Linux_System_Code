@@ -20,7 +20,9 @@ int main (int argc, char * argv[])
         perror("file failed!");
         exit(1);
     }
+
     rewind(fp);
+    
     //EOF是-1，失败或者读取到EOF会返回NULL
     while (fgets(buf, BUFSIZE, fp) != NULL)
         cnt ++;
@@ -42,7 +44,6 @@ int main (int argc, char * argv[])
         fflush(fp);
         sleep(1);
     }
-    
     
     fclose(fp);
 
