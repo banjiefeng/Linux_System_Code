@@ -347,6 +347,11 @@ level:
 void closelog(void);
 ```
 
+单实例的守护进程：防止重复创建
+利用锁文件 /var/run/name.pid
+
+守护进程的开机的启动脚本文件
+
 ### 使用示例
 ```c
 int main() {
