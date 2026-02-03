@@ -1,0 +1,112 @@
+# include <stdio.h>
+# include <stdlib.h>
+# include <fcntl.h>
+# include <sys/types.h>
+# include <sys/stat.h> 
+# include <fcntl.h>
+# include <unistd.h>
+# include <errno.h>
+# include <signal.h>
+
+# define CPS 10
+# define BUFSIZE CPS
+
+/*
+    流量控制的cat
+    漏桶
+    每秒输出10个字符
+*/
+
+static volatile int loop = 0;
+
+static void alrm_handler(int s)
+{
+    loop = 1;
+    alarm(1);
+}
+
+int main (int argc, char * argv[])
+{
+    int sfd;
+    char buf[BUFSIZE];
+    int len, ret, pos;
+
+
+    if(argc < 2)
+    {
+        fprintf(stderr, "Usage...\n");
+        exit(1);
+    }
+
+    signal(SIGALRM, alrm_handler);
+    alarm(1);
+
+    //防止信号发出导致处于阻塞态的进程进入运行态
+    do
+    {
+       /* code */
+        sfd = open(argv[1], O_RDONLY);
+        
+        if(sfd < 0)
+        {
+            if(errno != EINTR)
+            {
+                perror("open() failed");
+                exit(1);
+            }
+        }
+
+    } while (sfd < 0);
+
+    while(1)
+    {
+        while(!loop)
+        pause();
+
+        loop = 0;
+
+        do
+        {
+            len = read(sfd, buf, BUFSIZE);
+            if(len < 0)
+            {
+                if(errno != EINTR)
+                {
+                    perror("read()");
+                    break;
+                }
+            }
+        } while (len < 0);        
+
+        if(len == 0)
+            break;
+
+        //防止读取较少
+        pos = 0;
+        
+        //一定要保证读到多少写到多少
+        //目的是保证系统产生信号时不会因为中断导致少写
+        while (len > 0)
+        {
+            /* code */
+            ret =  write(1, buf + pos, len);
+            
+            if(ret < 0)
+            {
+                //如果因为信号中断导致的写异常
+                //则重新进行写入
+                if(errno == EINTR)
+                continue;
+                perror("write()");
+                exit(1);
+            }        
+
+            len -= ret;
+            pos += ret;
+        }
+    }
+
+    close(sfd);
+
+    return 0;
+}
