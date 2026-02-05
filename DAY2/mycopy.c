@@ -5,6 +5,7 @@
 # include <sys/stat.h> 
 # include <fcntl.h>
 # include <unistd.h>
+# include <errno.h>
 
 # define BUFSIZE 1024
 
@@ -20,33 +21,54 @@ int main (int argc, char * argv[])
         exit(1);
     }
 
-    sfd = open(argv[1], O_RDONLY);
-    //当open参数中含有O_CREAT时，需要设置文件权限 mode, 最后的文件权限带大小 mode & ~ umask
-    dfd =  open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, 0600);
+    //防止信号发出导致处于阻塞态的进程进入运行态
+    do
+    {
+       /* code */
+        sfd = open(argv[1], O_RDONLY);
+        
+        if(sfd < 0)
+        {
+            if(errno != EINTR)
+            {
+                perror("open() failed");
+                exit(1);
+            }
+        }
 
-    //返回的文件描述符 < 0 文件打开失败
-    if(sfd < 0)
-    {
-        perror("open()");
-        exit(1);
-    } 
+    } while (sfd < 0);
     
-    if(dfd < 0)
+    //当open参数中含有O_CREAT时，需要设置文件权限 mode, 最后的文件权限带大小 mode & ~ umask
+    do
     {
-        perror("open()");
-        exit(1);
-    }
+       dfd =  open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, 0600);
+
+        if(dfd < 0)
+        {
+            if(errno != EINTR)
+            {
+                perror("open() failed");
+                close(sfd);
+                exit(1);
+            }
+        }
+
+    } while (dfd < 0);
 
     while(1)
     {
-        len = read(sfd, buf, BUFSIZE);
-        
-        //说明读取错误
-        if(len < 0)
+        do
         {
-            perror("open()");
-            break;
-        }
+            len = read(sfd, buf, BUFSIZE);
+            if(len < 0)
+            {
+                if(errno != EINTR)
+                {
+                    perror("open()");
+                    break;
+                }
+            }
+        } while (len < 0);        
 
         if(len == 0)
             break;
@@ -63,19 +85,16 @@ int main (int argc, char * argv[])
             
             if(ret < 0)
             {
+                //如果因为信号中断导致的写异常
+                //则重新进行写入
+                if(errno == EINTR)
+                continue;
                 perror("write()");
                 exit(1);
             }        
 
             len -= ret;
             pos += ret;
-        }
-        
-        
-        if(ret < 0)
-        {
-            perror("write");
-            break;
         }
     }
 

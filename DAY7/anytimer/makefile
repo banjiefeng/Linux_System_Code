@@ -1,12 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra -g 
 
 TARGET = main
 
 # 默认目标
 all: $(TARGET)
 
-$(TARGET): mycopy.c
+$(TARGET): *.c
 	$(CC) $(CFLAGS) -o $@ $^ 
 
 # 清理

@@ -6,7 +6,7 @@ TARGET = main
 # 默认目标
 all: $(TARGET)
 
-$(TARGET): slowcat2.c
+$(TARGET): suspend_RT.c
 	$(CC) $(CFLAGS) -o $@ $^ 
 
 # 清理

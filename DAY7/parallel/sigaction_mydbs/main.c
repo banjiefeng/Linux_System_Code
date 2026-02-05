@@ -6,7 +6,7 @@
 # include <fcntl.h>
 # include <unistd.h>
 # include <errno.h>
-# include "mytbf.h"
+# include "mytbf_sigaction.h"
 # include <string.h>
 
 /*
@@ -19,6 +19,11 @@
 # define BURST 100
 # define BUFSIZE 1024
 
+/*
+    限制信号发出的来源，防止其他的进程
+    向该进程发信号时产生的不可知异常
+    使用sigaction来限制只接受内核发出的信号
+*/
 int main (int argc, char * argv[])
 {
     int sfd;
@@ -32,7 +37,7 @@ int main (int argc, char * argv[])
         exit(1);
     }
 
-    printf("%d\n", getpid());
+    printf("pid:%d\n", getpid());
 
     //防止信号发出导致处于阻塞态的进程进入运行态
     do

@@ -6,25 +6,31 @@
 # include <fcntl.h>
 # include <unistd.h>
 # include <errno.h>
-# include "mytbf.h"
-# include <string.h>
-
-/*
-    基于令牌桶的cat
-    根据等待的时间确定每次输出的字符
-    每妙多输出10个字符
-*/
+# include <signal.h>
+# include <sys/time.h>
 
 # define CPS 10
-# define BURST 100
-# define BUFSIZE 1024
+# define BUFSIZE CPS
+
+/*
+    流量控制的cat
+    漏桶
+    每秒输出10个字符
+*/
+
+static volatile int loop = 0;
+
+static void alrm_handler(int s)
+{
+    loop = 1;
+}
 
 int main (int argc, char * argv[])
 {
     int sfd;
     char buf[BUFSIZE];
-    int len, ret, pos, token;
-    tbf_st * tbf;
+    int len, ret, pos;
+    struct itimerval itimerval_res;
 
     if(argc < 2)
     {
@@ -32,7 +38,21 @@ int main (int argc, char * argv[])
         exit(1);
     }
 
-    printf("%d\n", getpid());
+    signal(SIGALRM, alrm_handler);
+
+    //间隔时间
+    itimerval_res.it_interval.tv_sec = 1;
+    itimerval_res.it_interval.tv_usec = 0;
+
+    //首次到期的时间
+    itimerval_res.it_value.tv_sec = 1;
+    itimerval_res.it_value.tv_usec = 0;
+
+    if(setitimer(ITIMER_REAL, &itimerval_res, NULL) < 0)
+    {
+        perror("setitimer():");
+        exit(1);
+    }
 
     //防止信号发出导致处于阻塞态的进程进入运行态
     do
@@ -51,31 +71,16 @@ int main (int argc, char * argv[])
 
     } while (sfd < 0);
 
-    //初始化令牌桶, 放入CPS 和 BURST
-    tbf = tbf_init(CPS, BURST);
-
-    if(tbf == NULL)
-    {
-        fprintf(stderr, "tbf init failed\n");
-        exit(1);
-    }
-
     while(1)
-    {   
+    {
+        while(!loop)
+        pause();
+
+        loop = 0;
+
         do
         {
-            token = tbf_fetchtoken(tbf, BUFSIZE);
-
-            if(token < 0)
-            {
-                fprintf(stderr, "fetch failed:%s\n", strerror(-token));
-                exit(1);
-            }
-
-            len = read(sfd, buf, token);
-
-            // printf("token: %d, len: %d\n", token, len);
-
+            len = read(sfd, buf, BUFSIZE);
             if(len < 0)
             {
                 if(errno != EINTR)
@@ -85,13 +90,6 @@ int main (int argc, char * argv[])
                 }
             }
         } while (len < 0);        
-
-        if(len < token)
-        {
-            int t = tbf_returntoken(tbf, token - len);
-            if(t < 0)
-            fprintf(stderr, "return token failed: %s\n", strerror(-t));
-        }
 
         if(len == 0)
             break;

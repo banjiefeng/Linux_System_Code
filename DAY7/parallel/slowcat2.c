@@ -17,7 +17,7 @@
     每妙多输出10个字符
 */
 
-static volatile int token = 0;
+static volatile sig_atomic_t token = 0;
 
 static void alrm_handler(int s)
 {
@@ -34,7 +34,6 @@ int main (int argc, char * argv[])
     int sfd;
     char buf[BUFSIZE];
     int len, ret, pos;
-
 
     if(argc < 2)
     {
