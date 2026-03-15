@@ -1,12 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -g -lpthread
 
 TARGET = main
 
 # 默认目标
 all: $(TARGET)
 
-$(TARGET): *.c
+$(TARGET): add.c
 	$(CC) $(CFLAGS) -o $@ $^ 
 
 # 清理

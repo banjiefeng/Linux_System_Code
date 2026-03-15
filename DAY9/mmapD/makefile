@@ -1,12 +1,12 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -g -lpthread
 
 TARGET = main
 
 # 默认目标
 all: $(TARGET)
 
-$(TARGET): *.c
+$(TARGET): shmemory.c
 	$(CC) $(CFLAGS) -o $@ $^ 
 
 # 清理
